@@ -28,11 +28,11 @@ function Dashboard() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-100">
+          <h1 className="text-2xl font-semibold text-rose-100">
             Task Dashboard
           </h1>
-          <p className="text-sm text-slate-400">
-            Welcome, {user?.email}. View and manage your tasks.
+          <p className="text-sm text-slate-300">
+            Welcome, {user?.name || user?.email}. View and manage your tasks.
           </p>
         </div>
       </div>
@@ -51,19 +51,19 @@ function Dashboard() {
         {tasks.map((task) => (
           <div
             key={task._id}
-            className="rounded-xl border border-slate-700 bg-slate-900/70 p-4"
+            className="rounded-xl border border-rose-500/25 bg-slate-950/70 p-4 shadow-lg"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-100">
                 {task.title}
               </h2>
-              <span className="rouded-full bg-slate-800 px-4 py-0.5 text-xs uppercase tracking-wide text-slate-300">
+              <span className="rounded-full bg-rose-950/70 px-4 py-0.5 text-xs uppercase tracking-wide text-rose-200 border border-rose-500/40">
                 {task.status}
               </span>
             </div>
 
             {task.description && (
-              <p className="mt-2 text-sm text-slate-300">{task.description}</p>
+              <p className="mt-2 text-sm text-slate-200">{task.description}</p>
             )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">

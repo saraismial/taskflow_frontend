@@ -1,21 +1,21 @@
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/ProtectedRoute";
-import ProtectedRoutes from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 text-slate-50">
       <Navbar />
       <Routes>
         <Route
           path="/"
           element={
-            <ProtectedRoutes>
+            <ProtectedRoute>
               <Dashboard />
-            </ProtectedRoutes>
+            </ProtectedRoute>
           }
         />
         <Route path="/login" element={<Login />} />
