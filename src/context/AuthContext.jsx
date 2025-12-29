@@ -15,9 +15,13 @@ export function AuthProvider({ children }) {
     const storedRefresh = localStorage.getItem("tfp_refreshToken");
 
     if (storedUser && storedAccess) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem("tfp_user");
+      }
       setAccessToken(storedAccess);
-      setRefreshToken(storedRefresh || null);
+      if (storedRefresh) setRefreshToken(storedRefresh);
     }
     setLoading(false);
   }, []);
@@ -31,6 +35,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem("tfp_accessToken", tokens.accessToken);
     if (tokens.refreshToken) {
       localStorage.setItem("tfp_refreshToken", tokens.refreshToken);
+    } else {
+      localStorage.removeItem("tfp_refreshToken");
     }
   };
 
@@ -54,6 +60,24 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("tfp_accessToken");
     localStorage.removeItem("tfp_refreshToken");
   };
+
+  useEffect(() => {
+    const interceptorId = client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error?.response?.status === 401) {
+          console.warn("Received 401 from API, logging out user.");
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      client.interceptors.response.eject(interceptorId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value = {
     user,
