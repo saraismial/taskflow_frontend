@@ -5,7 +5,7 @@ function Sidebar() {
   const { user } = useAuth();
 
   return (
-    <aside className="hidden md:flex md:flex-col w-60 border-r border-rose-500/20 bg-slate-950//70 backdrop-blur px-4 py-6">
+    <aside className="hidden min-h-screen md:flex md:flex-col h-100vh w-60 border-r border-rose-500/20 bg-slate-950//70 backdrop-blur px-4 py-6">
       <div className="mb-8">
         <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
           Overview

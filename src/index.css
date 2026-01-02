@@ -5,3 +5,10 @@
 body {
   @apply min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 text-slate-50;
 }
+
+.bg-grid-slate {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}

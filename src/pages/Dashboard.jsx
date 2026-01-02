@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import client from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import NewTaskForm from "../components/NewTaskForm";
+import TaskForm from "../components/TaskForm";
+import EditTaskModal from "../components/EditTaskModal";
 import TaskList from "../components/TaskList";
 
 const PRIORITY_ORDER = {
@@ -26,6 +27,11 @@ function Dashboard() {
     status: "pending",
     dueDate: "",
   });
+
+  const [editingTask, setEditingTask] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: "long",
@@ -91,8 +97,8 @@ function Dashboard() {
       };
 
       const res = await client.post("/tasks", payload);
-
       const createdTask = res.data.task || res.data;
+
       setTasks((prev) => [createdTask, ...prev]);
 
       try {
@@ -118,6 +124,88 @@ function Dashboard() {
     }
   };
 
+  const handleStartEditTask = (task) => {
+    setEditError("");
+
+    if (!task) {
+      setEditingTask(null);
+      setIsEditModalOpen(false);
+      return;
+    }
+
+    setEditingTask({
+      ...task,
+      dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingTask(null);
+    setEditError("");
+  };
+
+  const handleEditTaskChange = (e) => {
+    if (!editingTask) return;
+    const { name, value } = e.target;
+
+    setEditingTask((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateTask = async (e) => {
+    e.preventDefault();
+    if (!editingTask) return;
+
+    if (!editingTask.title.trim()) {
+      setEditError("Title is required.");
+      return;
+    }
+
+    setSavingEdit(true);
+    setEditError("");
+
+    try {
+      const payload = {
+        title: editingTask.title.trim(),
+        description: editingTask.description?.trim() || undefined,
+        priority: editingTask.priority,
+        status: editingTask.status,
+        dueDate: editingTask.dueDate || undefined,
+      };
+
+      const res = await client.patch(`/tasks/${editingTask._id}`, payload);
+      const updated = res.data.task || res.data;
+
+      setTasks((prev) =>
+        prev.map((t) => (t._id === updated._id ? updated : t))
+      );
+
+      setIsEditModalOpen(false);
+      setEditingTask(null);
+    } catch (err) {
+      console.error("Update task failed:", err);
+      setEditError(err.response?.data?.message || "Failed to updated task.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm("Delete this task?")) return;
+
+    try {
+      await client.delete(`/tasks/${taskId}`);
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+    } catch (err) {
+      console.error("Delete task failed:", err);
+      setError(err.response?.data?.message || "Failed to delete task.");
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <header className="flex flex-col gap-2 md:ustify-between py-2">
@@ -136,18 +224,35 @@ function Dashboard() {
       </header>
 
       <section className="space-y-4">
-        <NewTaskForm
-          newTask={newTask}
+        <TaskForm
+          task={newTask}
           creating={creating}
-          createError={createError}
+          error={createError}
           onChange={handleNewTaskChange}
           onSubmit={handleCreateTask}
+          title="Create a new task"
+          description="Add tasks with priority and due dates to keep things moving."
+          submitButtonText="Add task"
+          submitButtonLoadingText="Creating..."
         />
+
         <TaskList
           loading={loading}
           error={error}
           tasks={tasks}
           sortedTasks={sortedTasks}
+          onEditTask={handleStartEditTask}
+          onDeleteTask={handleDeleteTask}
+        />
+
+        <EditTaskModal
+          isOpen={isEditModalOpen}
+          task={editingTask}
+          creating={savingEdit}
+          error={editError}
+          onChange={handleEditTaskChange}
+          onClose={handleCloseEditModal}
+          onSubmit={handleUpdateTask}
         />
       </section>
     </div>

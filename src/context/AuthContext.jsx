@@ -8,7 +8,9 @@ export function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
+  // Initial load from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("tfp_user");
     const storedAccess = localStorage.getItem("tfp_accessToken");
@@ -26,6 +28,7 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  // Helpers
   const saveAuth = ({ user, tokens }) => {
     setUser(user);
     setAccessToken(tokens.accessToken);
@@ -33,6 +36,7 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem("tfp_user", JSON.stringify(user));
     localStorage.setItem("tfp_accessToken", tokens.accessToken);
+
     if (tokens.refreshToken) {
       localStorage.setItem("tfp_refreshToken", tokens.refreshToken);
     } else {
@@ -49,6 +53,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await client.post("/auth/login", { email, password });
     saveAuth(res.data);
+    setSessionExpired(false);
     return res.data;
   };
 
@@ -61,15 +66,86 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("tfp_refreshToken");
   };
 
+  const clearSessionExpired = () => setSessionExpired(false);
+
+  // Axios response interceptor, autorefresh on 401
   useEffect(() => {
+    let isRefreshing = false;
+    let refreshPromise = null;
+
     const interceptorId = client.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error?.response?.status === 401) {
-          console.warn("Received 401 from API, logging out user.");
-          logout();
+      async (error) => {
+        const status = error?.response?.status;
+        const ogReq = error.config || {};
+
+        const url = ogReq.url || "";
+        const isAuthRoute =
+          url.includes("/auth/login") ||
+          url.includes("/auth/register") ||
+          url.includes("/auth/refresh");
+
+        if (status !== 401 || isAuthRoute) {
+          return Promise.reject(error);
         }
-        return Promise.reject(error);
+
+        // Prevent infinite loops, if retried once already => just log out
+        if (ogReq._retry) {
+          logout();
+          setSessionExpired(true);
+          return Promise.reject(error);
+        }
+
+        const storedRefreshToken =
+          refreshToken || localStorage.getItem("tfp_refreshToken");
+
+        if (!storedRefreshToken) {
+          logout();
+          setSessionExpired(true);
+          return Promise.reject(error);
+        }
+
+        ogReq._retry = true;
+
+        try {
+          if (!isRefreshing) {
+            isRefreshing = true;
+
+            refreshPromise = client.post("/auth/refresh", {
+              refreshToken: storedRefreshToken,
+            });
+          }
+
+          const refreshRes = await refreshPromise;
+          isRefreshing = false;
+
+          const token = refreshRes.data.tokens || refreshRes.data || {};
+
+          const newAccess = tokens.accessToken;
+          const newRefresh = tokens.refreshToken || storedRefreshToken;
+
+          if (!newAccess) {
+            throw new Error("No access token returned from refresh");
+          }
+
+          setAccessToken(newAccess);
+          setRefreshToken(newRefresh);
+          localStorage.setItem("tfp_accessToken", newAccess);
+          localStorage.setItem("tfp_refreshToken", newRefresh);
+
+          ogReq.headers = {
+            ...(ogReq.headers || {}),
+            Authorization: `Bearer ${newAccess}`,
+          };
+
+          return client(ogReq);
+        } catch (refreshErr) {
+          console.warn("Refresh failed, logging out:", refreshErr);
+          isRefreshing = false;
+          logout();
+          setSessionExpired(true);
+          return Promise.reject(refreshErr);
+        }
       }
     );
 
@@ -87,6 +163,8 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    sessionExpired,
+    clearSessionExpired,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
