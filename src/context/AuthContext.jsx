@@ -57,6 +57,18 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
+  const updateUser = (partialOrFullUser) => {
+    setUser((prev) => {
+      const next =
+        typeof partialOrFullUser === "function"
+          ? partialOrFullUser(prev)
+          : partialOrFullUser;
+
+      localStorage.setItem("tfp_user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     setAccessToken(null);
@@ -119,7 +131,7 @@ export function AuthProvider({ children }) {
           const refreshRes = await refreshPromise;
           isRefreshing = false;
 
-          const token = refreshRes.data.tokens || refreshRes.data || {};
+          const tokens = refreshRes.data.tokens || refreshRes.data || {};
 
           const newAccess = tokens.accessToken;
           const newRefresh = tokens.refreshToken || storedRefreshToken;
@@ -162,6 +174,7 @@ export function AuthProvider({ children }) {
     loading,
     register,
     login,
+    updateUser,
     logout,
     sessionExpired,
     clearSessionExpired,
