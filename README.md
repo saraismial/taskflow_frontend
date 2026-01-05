@@ -1,16 +1,71 @@
-# React + Vite
+# TaskFlow Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend for TaskFlow — a task management app with authentication, a dashboard for creating/updating tasks, and account management (profile edit, password change, account deletion).
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
 
-## React Compiler
+- React
+- Vite
+- Axios
+- React Router
+- Context API
+- Tailwind CSS (utility classes)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## What the App Does
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+After logging in, you land in a protected workspace with:
+
+- A **Task Dashboard** to create tasks and manage your task list
+- A **Profile page** to update account details, change password, or delete your account
+
+---
+
+## Features
+
+### Authentication + Session
+
+- Register + Login screens
+- Stores `user`, `accessToken`, and `refreshToken` in localStorage
+- Axios request interceptor automatically attaches the access token to requests
+- Axios response interceptor automatically attempts token refresh on 401 (and retries the original request)
+
+### Task Dashboard
+
+- Fetches tasks from the API and displays them in a list
+- Create tasks with:
+  - title
+  - description (optional)
+  - priority (high/medium/low)
+  - status
+  - due date (optional)
+- Sorts tasks by **due date** first, then **priority**
+- Edit tasks in an **Edit Task modal**
+- Delete tasks with a confirmation prompt
+- Shows current date + task count
+
+### Profile & Account Management
+
+- Profile page shows name/email/role
+- **Edit Profile modal**
+- **Change Password modal**
+- **Delete Account modal** (danger zone)
+
+### Theme (WIP)
+
+- Includes a ThemeContext with `day` and `night` modes and saved preference in localStorage.
+
+---
+
+## API Configuration
+
+The frontend calls the backend via Axios:
+
+- Base URL: `http://localhost:5050/api`
+
+If your backend runs elsewhere, update the base URL in:
+
+- `src/api/client.js`
