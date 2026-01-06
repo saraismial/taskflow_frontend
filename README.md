@@ -1,6 +1,8 @@
 # TaskFlow Frontend
 
-React + Vite frontend for TaskFlow — a task management app with authentication, a dashboard for creating/updating tasks, and account management (profile edit, password change, account deletion).
+- React + Vite frontend for TaskFlow — a task management app with authentication, a dashboard for creating/updating tasks, and account management (profile edit, password change, account deletion).
+- Demo
+  - https://taskflowreact.netlify.app/login
 
 ---
 
