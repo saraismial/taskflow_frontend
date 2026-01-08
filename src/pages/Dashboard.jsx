@@ -101,13 +101,6 @@ function Dashboard() {
 
       setTasks((prev) => [createdTask, ...prev]);
 
-      try {
-        const all = await client.get("/tasks");
-        setTasks(all.data);
-      } catch (fetchErr) {
-        console.warn("Failed to refetch tasks after create:", fetchErr);
-      }
-
       // reset
       setNewTask({
         title: "",
