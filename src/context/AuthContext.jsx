@@ -105,6 +105,7 @@ export function AuthProvider({ children }) {
         if (ogReq._retry) {
           logout();
           setSessionExpired(true);
+          window.location.href = "/login";
           return Promise.reject(error);
         }
 
@@ -114,6 +115,7 @@ export function AuthProvider({ children }) {
         if (!storedRefreshToken) {
           logout();
           setSessionExpired(true);
+          window.location.href = "/login";
           return Promise.reject(error);
         }
 
@@ -156,6 +158,7 @@ export function AuthProvider({ children }) {
           isRefreshing = false;
           logout();
           setSessionExpired(true);
+          window.location.href = "/login";
           return Promise.reject(refreshErr);
         }
       }
