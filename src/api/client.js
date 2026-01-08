@@ -3,6 +3,8 @@ import axios from "axios";
 // VIte ngrok env var, AWS later
 const API_BASE_URL =import.meta.env.VITE_API_URL || "http://localhost:5050/api";
 
+if(!API_BASE_URL) throw new Error("VITE_API_URL missing - frontend can't run safely" );
+
 const client = axios.create({
     baseURL: API_BASE_URL,
 });

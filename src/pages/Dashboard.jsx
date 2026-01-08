@@ -43,6 +43,13 @@ function Dashboard() {
     const fetchTasks = async () => {
       try {
         const res = await client.get("/tasks");
+
+        if (!Array.isArray(res.data)) {
+          console.error("Invalid tasks payload:", res.data);
+          setTasks([]);
+          return;
+        }
+
         setTasks(res.data);
       } catch (err) {
         console.error(err);
