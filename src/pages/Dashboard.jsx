@@ -46,8 +46,7 @@ function Dashboard() {
 
         if (!Array.isArray(res.data)) {
           console.error("Invalid tasks payload:", res.data);
-          setTasks([]);
-          return;
+          throw new Error("Invalid tasks response");
         }
 
         setTasks(res.data);
