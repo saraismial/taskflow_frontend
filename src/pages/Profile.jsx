@@ -1,17 +1,31 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import client from "../api/client";
 import EditProfileModal from "../components/EditProfileModal";
 import ChangePasswordModal from "../components/ChangePasswordModal";
-import DeleteAccountModal from "../components/DeleteAccountModal";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [error, setError] = useState("");
 
   if (!user) return null;
+
+  const handleDeleteAccount = async () => {
+    try {
+      await client.delete("/users/me");
+      logout();
+      navigate("/login");
+    } catch (err) {
+      setError("Failed to delete account.");
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -79,9 +93,14 @@ export default function Profile() {
         isOpen={isPasswordOpen}
         onClose={() => setIsPasswordOpen(false)}
       />
-      <DeleteAccountModal
+      <ConfirmDeleteModal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
+        title="Delete account?"
+        desc="This will permanently delete your account."
+        confirmTxt="Delete account"
+        onConfirm={handleDeleteAccount}
+        error={error}
       />
     </div>
   );

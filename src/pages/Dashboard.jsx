@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import TaskForm from "../components/TaskForm";
 import EditTaskModal from "../components/EditTaskModal";
 import TaskList from "../components/TaskList";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 
 const PRIORITY_ORDER = {
   high: 0,
@@ -17,6 +18,11 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTask, setDeleteTask] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteTaskErr, setDeleteTaskErr] = useState("");
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -43,7 +49,6 @@ function Dashboard() {
     const fetchTasks = async () => {
       try {
         const res = await client.get("/tasks");
-        console.log("GET /tasks response:", res.data);
 
         if (!Array.isArray(res.data)) {
           console.error("Invalid tasks payload:", res.data);
@@ -194,15 +199,24 @@ function Dashboard() {
     }
   };
 
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Delete this task?")) return;
+  const confirmDeleteTask = (taskId) => {
+    setDeleteTaskErr("");
+    setDeleteTask(taskId);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeleteTask = async () => {
+    if (!deleteTask) return;
+    setDeleteTaskErr("");
 
     try {
-      await client.delete(`/tasks/${taskId}`);
-      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+      await client.delete(`/tasks/${deleteTask}`);
+      setTasks((prev) => prev.filter((t) => t._id !== deleteTask));
+      setIsDeleteOpen(false);
+      setDeleteTask(null);
     } catch (err) {
-      console.error("Delete task failed:", err);
-      setError(err.response?.data?.message || "Failed to delete task.");
+      console.error(err);
+      setDeleteTaskErr(err?.response?.data?.message || "Failed to delete task");
     }
   };
 
@@ -242,7 +256,7 @@ function Dashboard() {
           tasks={tasks}
           sortedTasks={sortedTasks}
           onEditTask={handleStartEditTask}
-          onDeleteTask={handleDeleteTask}
+          onDeleteTask={confirmDeleteTask}
         />
 
         <EditTaskModal
@@ -253,6 +267,20 @@ function Dashboard() {
           onChange={handleEditTaskChange}
           onClose={handleCloseEditModal}
           onSubmit={handleUpdateTask}
+        />
+
+        <ConfirmDeleteModal
+          isOpen={isDeleteOpen}
+          onClose={() => {
+            setIsDeleteOpen(false);
+            setDeleteTask(null);
+            setDeleteTaskErr("");
+          }}
+          title="Delete task?"
+          desc="This task will be permanently removed."
+          confirmTxt="Delete task"
+          onConfirm={handleDeleteTask}
+          error={deleteTaskErr}
         />
       </section>
     </div>
