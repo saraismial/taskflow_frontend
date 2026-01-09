@@ -7,6 +7,9 @@ if(!API_BASE_URL) throw new Error("VITE_API_URL missing - frontend can't run saf
 
 const client = axios.create({
     baseURL: API_BASE_URL,
+    headers : {
+        "ngrok-skip-browser-warning": "true",
+    },
 });
 
 // Attach access token from localStoarge
